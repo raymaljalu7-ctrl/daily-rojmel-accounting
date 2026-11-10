@@ -15,8 +15,7 @@ service cloud.firestore {
     }
     match /transactions/{id} {
       allow read, create: if approved();
-      allow update: if admin();
-      allow delete: if admin();
+      allow update, delete: if admin();
     }
     match /deleteRequests/{id} {
       allow create: if approved()
@@ -24,6 +23,19 @@ service cloud.firestore {
         && request.resource.data.status == "pending";
       allow read: if admin() || (approved() && resource.data.requestedBy == request.auth.uid);
       allow update, delete: if admin();
+    }
+    match /products/{id} {
+      allow read, create: if approved();
+      allow update, delete: if admin();
+    }
+    match /expenseHeads/{id} {
+      allow read, create: if approved();
+      allow update, delete: if admin();
+    }
+    match /settings/{id} {
+      allow read: if approved();
+      allow create, update: if admin();
+      allow delete: if admin();
     }
   }
 }
