@@ -1,0 +1,9 @@
+{
+  "name": "Daily Rojmel Accounting",
+  "short_name": "Daily Rojmel",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f7f5",
+  "theme_color": "#245c50",
+  "icons": []
+}
