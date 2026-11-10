@@ -6,7 +6,7 @@ An installable bilingual (English / Gujarati) accounting PWA using Firebase Auth
 - Email/password sign-in and admin-approved registration
 - Purchase entry with Cash, Bank, Credit Purchase and optional product/quantity
 - Sales entry with Sales Invoice or Delivery Challan print/PDF workflow
-- Expense entry with user-creatable, reusable expense heads and expense-head reports
+- Cash/Bank receipt and payment entries for complete Rojmel flows\n- Expense entry with user-creatable, reusable expense heads and expense-head reports
 - Product Master with unit and cost price
 - Production entry and product-wise stock (production minus sales)
 - Combined Cash + Bank Rojmel and separate Cash Rojmel / Bank Rojmel
@@ -19,7 +19,7 @@ An installable bilingual (English / Gujarati) accounting PWA using Firebase Auth
 ## Important accounting notes
 - Profit is shown as one combined business total. The current estimate uses each sold product's cost price from Product Master multiplied by sold quantity, then subtracts expenses. Keep product cost prices current; this is not FIFO/weighted-average inventory valuation.
 - Stock is calculated as production quantity minus sales quantity. Opening stock and purchase-to-stock integration are not part of this first module release.
-- Rojmel includes cash/bank sales as receipts and cash/bank purchases and expenses as payments. Credit sales/purchases do not change cash or bank until a receipt/payment module is added.
+- Rojmel includes cash/bank sales and receipt entries as receipts, and cash/bank purchases, payments and expenses as payments. Credit sales/purchases do not change cash or bank until a receipt/payment is entered.
 - Sales document print opens the browser print dialog; choose “Save as PDF” to download. Add your legal business details and tax configuration before using invoices as statutory tax invoices.
 - Test with sample data before relying on the reports for statutory accounting or tax filing.
 
