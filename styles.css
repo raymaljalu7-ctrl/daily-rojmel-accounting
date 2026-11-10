@@ -11,3 +11,5 @@
 .report-note{margin-top:12px}.grand-total{font-weight:800;background:#e7f3ec!important;color:#17633f}
 @media(max-width:600px){.report-heading{align-items:flex-start;flex-direction:column}.report-totals{justify-content:flex-start;gap:12px}}
 @media print{.report-heading{break-after:avoid}.report-table{font-size:10px}.report-table th,.report-table td{padding:6px}.report-totals{border:1px solid #bbb;background:#fff!important}}
+
+.master-item{display:flex;align-items:center;justify-content:space-between;gap:10px}.master-delete{padding:5px 10px;font-size:.8rem;flex-shrink:0}
