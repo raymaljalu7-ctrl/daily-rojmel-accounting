@@ -63,38 +63,47 @@ function runReport(){
    body=ledgerTable(rows)+'<div class="report-totals"><span>'+tr("opening")+': <b>'+fmt(opening[kind])+'</b></span><span>'+tr("closing")+': <b>'+fmt(rows.at(-1)?.balance??opening[kind])+'</b></span></div>';
   }
  }else if(kind==="summary"){
-  const sales=items.filter(x=>x.type==="sale").reduce((s,x)=>s+(+x.total||+x.amount||0),0);
-  const cogs=items.filter(x=>x.type==="sale").reduce((s,x)=>{const p=products.find(p=>p.id===x.productId);return s+(+x.quantity||0)*(+p?.costPrice||0);},0);
-  const expenses=items.filter(x=>x.type==="expense").reduce((s,x)=>s+(+x.amount||0),0),profit=sales-cogs-expenses;
-  body=table([lang==="gu"?"વિગત":"Particulars",tr("amount")],[
-   '<tr><td>'+tr("salesTotal")+'</td><td class="num">'+fmt(sales)+'</td></tr>',
-   '<tr><td>'+tr("costOfGoods")+'</td><td class="num">'+fmt(cogs)+'</td></tr>',
-   '<tr><td>'+tr("totalExpenses")+'</td><td class="num">'+fmt(expenses)+'</td></tr>',
-   '<tr class="grand-total"><td>'+tr("netProfit")+'</td><td class="num">'+fmt(profit)+'</td></tr>'
-  ])+'<p class="report-note">'+(lang==="gu"?"નફો અંદાજિત છે: વેચાણ − વેચાયેલા જથ્થાની માસ્ટરમાં નોંધેલી પડતર કિંમત − ખર્ચ.":"Profit is an estimate: sales minus sold quantity × product master cost price minus expenses.")+'</p>';
+   const sales=items.filter(x=>x.type==="sale").reduce((s,x)=>s+(+x.total||+x.amount||0),0);
+   const purchases=items.filter(x=>x.type==="purchase").reduce((s,x)=>s+(+x.total||+x.amount||0),0);
+   const otherExpenses=items.filter(x=>x.type==="expense").reduce((s,x)=>s+(+x.amount||0),0);
+   const totalExpenses=purchases+otherExpenses,profit=sales-totalExpenses;
+   body=table([lang==="gu"?"વિગત":"Particulars",tr("amount")],[
+    '<tr><td>'+tr("salesTotal")+'</td><td class="num">'+fmt(sales)+'</td></tr>',
+    '<tr><td>'+(lang==="gu"?"કાચા માલની ખરીદી":"Raw Material Purchase")+'</td><td class="num">'+fmt(purchases)+'</td></tr>',
+    '<tr><td>'+(lang==="gu"?"અન્ય ખર્ચ":"Other Expenses")+'</td><td class="num">'+fmt(otherExpenses)+'</td></tr>',
+    '<tr class="grand-total"><td>'+(lang==="gu"?"કુલ ખર્ચ":"Total Expenses")+'</td><td class="num">'+fmt(totalExpenses)+'</td></tr>',
+    '<tr class="grand-total"><td>'+tr("netProfit")+'</td><td class="num">'+fmt(profit)+'</td></tr>'
+   ])+'<p class="report-note">'+(lang==="gu"?"નફો = કુલ વેચાણ − (કાચા માલની ખરીદી + અન્ય ખર્ચ).":"Profit = Total Sales − (Raw Material Purchases + Other Expenses).")+'</p>';
  }else if(kind==="profit"){
-  const byProduct=new Map();
-  items.filter(x=>x.type==="sale").forEach(x=>{
-   const key=x.productId||x.productName||"unknown",p=products.find(p=>p.id===x.productId),name=x.productName||p?.name||"Unknown";
-   const row=byProduct.get(key)||{name,quantity:0,sales:0,cost:0};
-   const qty=+x.quantity||0,sale=+(x.total||x.amount||0),cost=qty*(+p?.costPrice||0);
-   row.quantity+=qty;row.sales+=sale;row.cost+=cost;byProduct.set(key,row);
-  });
-  const rows=[...byProduct.values()].sort((a,b)=>a.name.localeCompare(b.name));
-  const gross=rows.reduce((n,x)=>n+x.sales-x.cost,0),expenses=items.filter(x=>x.type==="expense").reduce((n,x)=>n+(+x.amount||0),0);
-  const dataRows=rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td class="num">'+x.quantity+'</td><td class="num">'+fmt(x.sales)+'</td><td class="num">'+fmt(x.cost)+'</td><td class="num"><b>'+fmt(x.sales-x.cost)+'</b></td></tr>');
-  dataRows.push('<tr class="grand-total"><td colspan="4">'+(lang==="gu"?"કુલ ગ્રોસ નફો":"Total Gross Profit")+'</td><td class="num">'+fmt(gross)+'</td></tr>');
-  dataRows.push('<tr><td colspan="4">'+tr("totalExpenses")+'</td><td class="num">'+fmt(expenses)+'</td></tr>');
-  dataRows.push('<tr class="grand-total"><td colspan="4">'+tr("netProfit")+'</td><td class="num">'+fmt(gross-expenses)+'</td></tr>');
-  body=table([tr("product"),tr("quantity"),tr("salesTotal"),tr("costOfGoods"),lang==="gu"?"નફો":"Profit"],dataRows.length>3?dataRows:[...dataRows.slice(0,0),'<tr><td colspan="5">'+tr("noEntries")+'</td></tr>']);
+   const byProduct=new Map();
+   items.filter(x=>x.type==="sale").forEach(x=>{
+    const key=x.productId||x.productName||"unknown",p=products.find(p=>p.id===x.productId),name=x.productName||p?.name||"Unknown";
+    const row=byProduct.get(key)||{name,quantity:0,sales:0};
+    row.quantity+=(+x.quantity||0);row.sales+=(+(x.total||x.amount||0));byProduct.set(key,row);
+   });
+   const rows=[...byProduct.values()].sort((a,b)=>a.name.localeCompare(b.name));
+   const sales=rows.reduce((n,x)=>n+x.sales,0);
+   const purchases=items.filter(x=>x.type==="purchase").reduce((n,x)=>n+(+x.total||+x.amount||0),0);
+   const otherExpenses=items.filter(x=>x.type==="expense").reduce((n,x)=>n+(+x.amount||0),0);
+   const totalExpenses=purchases+otherExpenses;
+   const dataRows=rows.map(x=>'<tr><td>'+esc(x.name)+'</td><td class="num">'+x.quantity+'</td><td class="num">'+fmt(x.sales)+'</td></tr>');
+   dataRows.push('<tr><td colspan="2">'+(lang==="gu"?"કાચા માલની ખરીદી":"Raw Material Purchase")+'</td><td class="num">'+fmt(purchases)+'</td></tr>');
+   dataRows.push('<tr><td colspan="2">'+(lang==="gu"?"અન્ય ખર્ચ":"Other Expenses")+'</td><td class="num">'+fmt(otherExpenses)+'</td></tr>');
+   dataRows.push('<tr class="grand-total"><td colspan="2">'+(lang==="gu"?"કુલ ખર્ચ":"Total Expenses")+'</td><td class="num">'+fmt(totalExpenses)+'</td></tr>');
+   dataRows.push('<tr class="grand-total"><td colspan="2">'+tr("netProfit")+'</td><td class="num">'+fmt(sales-totalExpenses)+'</td></tr>');
+   body=table([tr("product"),tr("quantity"),tr("salesTotal")],dataRows.length>4?dataRows:[...dataRows.slice(0,0),'<tr><td colspan="3">'+tr("noEntries")+'</td></tr>']);
  }else if(kind==="production"){
   const rows=items.filter(x=>x.type==="production").map(x=>'<tr><td>'+x.date+'</td><td>'+esc(x.productName||products.find(p=>p.id===x.productId)?.name||"")+'</td><td class="num">'+(+x.quantity||0)+'</td><td>'+esc(x.unit||"")+'</td><td>'+esc(x.description||"")+'</td></tr>');
   const totalQty=items.filter(x=>x.type==="production").reduce((sum,x)=>sum+(+x.quantity||0),0);
   body=table([tr("date"),tr("product"),tr("quantity"),tr("unit"),tr("description")],rows.length?rows:['<tr><td colspan="5">'+tr("noEntries")+'</td></tr>'])+'<div class="report-totals"><span>'+tr("totalProduction")+': <b>'+fmt(totalQty)+'</b></span></div>';
  }else if(kind==="expense"){
-  const map={};items.filter(x=>x.type==="expense").forEach(x=>map[x.expenseHead||"Other"]=(map[x.expenseHead||"Other"]||0)+(+x.amount||0));
-  const rows=Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>'<tr><td>'+esc(k)+'</td><td class="num">'+fmt(v)+'</td></tr>');
-  body=table([tr("expenseHead"),tr("total")],rows.length?rows:[noData]);
+   const map={};
+   items.filter(x=>x.type==="purchase").forEach(x=>{const k=lang==="gu"?"કાચા માલની ખરીદી":"Raw Material Purchase";map[k]=(map[k]||0)+(+x.total||+x.amount||0);});
+   items.filter(x=>x.type==="expense").forEach(x=>{const k=x.expenseHead||"Other";map[k]=(map[k]||0)+(+x.amount||0);});
+   const rows=Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>'<tr><td>'+esc(k)+'</td><td class="num">'+fmt(v)+'</td></tr>');
+   const total=Object.values(map).reduce((sum,v)=>sum+v,0);
+   if(rows.length)rows.push('<tr class="grand-total"><td>'+(lang==="gu"?"કુલ ખર્ચ":"Total Expenses")+'</td><td class="num">'+fmt(total)+'</td></tr>');
+   body=table([tr("expenseHead"),tr("total")],rows.length?rows:[noData]);
  }else if(kind==="stock"){
   const rows=stockRows().map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.unit)+'</td><td class="num">'+x.produced+'</td><td class="num">'+x.sold+'</td><td class="num"><b>'+x.closing+'</b></td></tr>');
   body=table([tr("product"),tr("unit"),tr("produced"),tr("sold"),tr("closingStock")],rows.length?rows:[noData])+'<p class="report-note">'+(lang==="gu"?"હાલનો સ્ટોક = કુલ ઉત્પાદન − કુલ વેચાણ.":"Current stock = total production − total sales.")+'</p>';
