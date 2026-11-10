@@ -91,7 +91,7 @@ function runReport(){
    dataRows.push('<tr><td colspan="2">'+(lang==="gu"?"અન્ય ખર્ચ":"Other Expenses")+'</td><td class="num">'+fmt(otherExpenses)+'</td></tr>');
    dataRows.push('<tr class="grand-total"><td colspan="2">'+(lang==="gu"?"કુલ ખર્ચ":"Total Expenses")+'</td><td class="num">'+fmt(totalExpenses)+'</td></tr>');
    dataRows.push('<tr class="grand-total"><td colspan="2">'+tr("netProfit")+'</td><td class="num">'+fmt(sales-totalExpenses)+'</td></tr>');
-   body=table([tr("product"),tr("quantity"),tr("salesTotal")],dataRows.length>4?dataRows:[...dataRows.slice(0,0),'<tr><td colspan="3">'+tr("noEntries")+'</td></tr>']);
+   body=table([tr("product"),tr("quantity"),tr("salesTotal")],dataRows.length?dataRows:['<tr><td colspan="3">'+tr("noEntries")+'</td></tr>']);
  }else if(kind==="production"){
   const rows=items.filter(x=>x.type==="production").map(x=>'<tr><td>'+x.date+'</td><td>'+esc(x.productName||products.find(p=>p.id===x.productId)?.name||"")+'</td><td class="num">'+(+x.quantity||0)+'</td><td>'+esc(x.unit||"")+'</td><td>'+esc(x.description||"")+'</td></tr>');
   const totalQty=items.filter(x=>x.type==="production").reduce((sum,x)=>sum+(+x.quantity||0),0);
